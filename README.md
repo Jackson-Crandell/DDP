@@ -1,1 +1,1 @@
-# DifferentialDynamicProgramming
+# Differential Dynamic Programming (DDP)
