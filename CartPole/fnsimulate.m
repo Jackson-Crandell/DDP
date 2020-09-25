@@ -18,11 +18,6 @@ global d3;
 x = xo;
 
 for k = 1:(Horizon-1)
-    
-
-
-
-
 
 det = d1 * d3 - d3^2 - (d2 * cos(x(2,k)))^2; 
      M(1,1) = d1 + 2 * d2 * cos(x(2,k));

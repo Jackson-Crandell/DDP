@@ -30,7 +30,7 @@ I = m*(l.^2);   % inertia
 Horizon = 500; % 1.5sec
 
 % Number of Iterations
-num_iter = 200;
+num_iter = 500;
 
 % Discretization
 dt = 0.01;	% .01 * 300 = 3 seconds
@@ -38,12 +38,12 @@ dt = 0.01;	% .01 * 300 = 3 seconds
 
 % Weight in Final State: (part of terminal cost)
 Q_f = zeros(2,2);
-Q_f(1,1) = 10; 	%Penalize more w.r.t errors in theta
-Q_f(2,2) = 10;     %Penalize more w.r.t errors in theta_dot
+Q_f(1,1) = 100; 	%Penalize more w.r.t errors in theta
+Q_f(2,2) = 100;     %Penalize more w.r.t errors in theta_dot
 
 
 % Weight in the Control:
-R = 10 * eye(1,1); % Weight control equally
+R = 10 * eye(2,2); % Weight control equally
 
 
 % Initial Configuration: (Initial state)
@@ -65,7 +65,7 @@ x_traj = zeros(2,Horizon);
 p_target(1,1) = pi;     % theta
 p_target(2,1) = 0;      % theta_dot
 
-% Learning Rate
+% Learning Rate:c
 gamma = 0.5; 
  
  
@@ -88,7 +88,7 @@ for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
 	R_k(:,:,j) = dt * l_uu;     % Hessian of running cost w.r.t u (matrix)
 	P_k(:,:,j) = dt * l_ux;     % Hessian of running cost w.r.t ux (matrix)
 
-	A(:,:,j) = eye(1,1) + dfx * dt;     % This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
+	A(:,:,j) = eye(2,2) + dfx * dt;     % This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
 	B(:,:,j) = dfu * dt;                % B matrix in notes is the linearized contols
 end
 
@@ -104,22 +104,22 @@ for j = (Horizon-1):-1:1
 		 
 	 H = R_k(:,:,j) + B(:,:,j)' * Vxx(:,:,j+1) * B(:,:,j);
 	 G = P_k(:,:,j) + B(:,:,j)' * Vxx(:,:,j+1) * A(:,:,j);   %Feedback Gain
-	 g_ = r_k(:,j) +  B(:,:,j)' * Vx(:,j+1);
+	 g = r_k(:,j) +  B(:,:,j)' * Vx(:,j+1);
 	 
  
 	 inv_H = inv(H);
 	 L_k(:,:,j)= - inv_H * G;   % Feedback term
-	 l_k (:,j) = - inv_H *g_;    % Feedforward term
+	 l_k (:,j) = - inv_H *g;    % Feedforward term
 	 
 
 	 Vxx(:,:,j) = Q_k(:,:,j)+ A(:,:,j)' * Vxx(:,:,j+1) * A(:,:,j) + L_k(:,:,j)' * H * L_k(:,:,j) + L_k(:,:,j)' * G + G' * L_k(:,:,j);
-	 Vx(:,j)= q_k(:,j) +  A(:,:,j)' *  Vx(:,j+1) + L_k(:,:,j)' * g_ + G' * l_k(:,j) + L_k(:,:,j)'*H * l_k(:,j);
-	 V(:,j) = q0(j) + V(j+1)   +   0.5 *  l_k (:,j)' * H * l_k (:,j) + l_k (:,j)' * g_;
+	 Vx(:,j)= q_k(:,j) +  A(:,:,j)' *  Vx(:,j+1) + L_k(:,:,j)' * g + G' * l_k(:,j) + L_k(:,:,j)'*H * l_k(:,j);
+	 V(:,j) = q0(j) + V(j+1)   +   0.5 *  l_k (:,j)' * H * l_k (:,j) + l_k (:,j)' * g;
 end 
 
 
 %----------------------------------------------> Find the controls
-dx = zeros(2,1);    % dx is initially zero because we start from the same point
+dx = zeros(4,1);    % dx is initially zero because we start from the same point
 
 for i=1:(Horizon-1)    
 	 du = l_k(:,i) + L_k(:,:,i) * dx;   	%Feedback Controller 
@@ -150,7 +150,7 @@ end
 
 
 figure(1);
-subplot(2,2,1)
+subplot(3,2,1)
 hold on
 plot(time,x_traj(1,:),'linewidth',4);  
 plot(time,p_target(1,1)*ones(1,Horizon),'red','linewidth',4)
@@ -159,15 +159,32 @@ xlabel('Time in sec','fontsize',20)
 hold off;
 grid;
 
-subplot(2,2,2);hold on;
+
+subplot(3,2,2);hold on;
 plot(time,x_traj(2,:),'linewidth',4); 
 plot(time,p_target(2,1)*ones(1,Horizon),'red','linewidth',4)
-title('Theta dot','fontsize',20);
+title('Theta 2','fontsize',20);
 xlabel('Time in sec','fontsize',20)
 hold off;
 grid;
 
-subplot(2,2,3);hold on
+subplot(3,2,3);hold on
+plot(time,x_traj(3,:),'linewidth',4); 
+plot(time,p_target(3,1)*ones(1,Horizon),'red','linewidth',4)
+title('Theta 1 dot','fontsize',20)
+ xlabel('Time in sec','fontsize',20)
+hold off;
+grid;
+
+subplot(3,2,4);hold on
+plot(time,x_traj(4,:),'linewidth',4); 
+plot(time,p_target(4,1)*ones(1,Horizon),'red','linewidth',4)
+title('Theta 2 dot','fontsize',20)
+ xlabel('Time in sec','fontsize',20)
+hold off;
+grid;
+
+subplot(3,2,5);hold on
 plot(Cost,'linewidth',2); 
 xlabel('Iterations','fontsize',20)
 title('Cost','fontsize',20);
