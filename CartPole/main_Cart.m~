@@ -83,12 +83,12 @@ for  j = 1:(Horizon-1) 	%Discretize trajectory for each timestep
 
 	% Quadratic expansion of the running cost around the x_trajectory (nominal) and u_k which is the nominal control
 	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
-	L0(j) = dt * l0; 			% zero order term (scalar)
-	Lx(:,j) = dt * l_x; 		% gradient of running cost w.r.t x (vector)
-	Lxx(:,:,j) = dt * l_xx; 	% Hessian of running cost w.r.t x (matrix)
-	Lu(:,j) = dt * l_u; 		% gradient of running cost w.r.t u (vector)
-	Luu(:,:,j) = dt * l_uu; 	% Hessian of running cost w.r.t u (matrix)
-	Lux(:,:,j) = dt * l_ux; 	% Hessian of running cost w.r.t ux (matrix)
+	q0(j) = dt * l0; 			% zero order term (scalar)
+	q_k(:,j) = dt * l_x; 		% gradient of running cost w.r.t x (vector)
+	Q_k(:,:,j) = dt * l_xx; 	% Hessian of running cost w.r.t x (matrix)
+	r_k(:,j) = dt * l_u; 		% gradient of running cost w.r.t u (vector)
+	R_k(:,:,j) = dt * l_uu; 	% Hessian of running cost w.r.t u (matrix)
+	P_k(:,:,j) = dt * l_ux; 	% Hessian of running cost w.r.t ux (matrix)
 
 	A(:,:,j) = eye(4,4) + dfx * dt; 	% This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
 	B(:,:,j) = dfu * dt; 				%B matrix in notes is the linearized contols
@@ -105,11 +105,11 @@ V(Horizon) = 0.5 * (x_traj(:,Horizon) - p_target)' * Q_f * (x_traj(:,Horizon) - 
 for j = (Horizon-1):-1:1
 		 
 	 Q(:,j) = L0(j) + V(:,j+1);
-     Q_x(:,j) = Lx(:,j) + A(:,:,j)'*Vx(:,j+1);
-     Q_u(:,j) = Lu(:,j) + B(:,:,j)'*Vx(:,j+1);
-     Q_xx(:,:,j) = Lxx(:,:,j) + A(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
-     Q_uu(:,:,j) = Luu(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*B(:,:,j);
-     Q_ux(:,:,j) = Lux(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
+     Q_x(:,j) = L_x(:,j) + A(:,:,j)'*Vx(:,j+1);
+     Q_u(:,j) = l_u(:,j) + B(:,:,j)'*Vx(:,j+1);
+     Q_xx(:,:,j) = l_xx(:,:,j) + A(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
+     Q_uu(:,:,j) = l_uu(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*B(:,:,j);
+     Q_ux(:,:,j) = l_ux(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
      
 	 L_k(:,:,j)= - inv(Q_uu(:,:,j))*Q_ux(:,:,j);   % Feedback term
 	 l_k (:,j) = - inv(Q_uu(:,:,j))*Q_u(:,j);    % Feedforward term

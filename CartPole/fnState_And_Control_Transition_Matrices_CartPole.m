@@ -1,3 +1,5 @@
+function [A,B,C,c] = fnState_And_Control_Transition_Matrices_CartPole(x,u)
+
 global M;
 global m;
 global b;
