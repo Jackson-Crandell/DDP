@@ -52,9 +52,9 @@ b2_1 = 0;
 
 
 % Horizon 
-Horizon = 800; % 1.5sec
+Horizon = 300; % 1.5sec
 % Number of Iterations
-num_iter = 500
+num_iter = 100
 
 % Discretization
 dt = 0.01; % .01 * 300 = 3 seconds
@@ -84,7 +84,7 @@ x_traj = zeros(4,Horizon);
  
 
 % Target: (Terminal States)
-p_target(1,1) = pi/3; %Theta1
+p_target(1,1) = pi/4; %Theta1
 p_target(2,1) = pi/6; %Theta2
 p_target(3,1) = 0; %Theta1_dot
 p_target(4,1) = 0; %Theta2_dot (velocity is zero)
@@ -102,7 +102,7 @@ for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
       
         % Quadratic expansion of the running cost around the x_trajectory (nominal) and
         % u_k which is the nominal control
-     [l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
+      [l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
       q0(j) = dt * l0; %zero order term (scaler)
       q_k(:,j) = dt * l_x; % gradient of running cost w.r.t x (vector)
       Q_k(:,:,j) = dt * l_xx; % Hessian of running cost w.r.t x (matrix)

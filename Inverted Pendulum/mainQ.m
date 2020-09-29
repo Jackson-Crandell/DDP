@@ -27,23 +27,26 @@ I = m*(l.^2);   % inertia
 
 
 % Horizon 
-Horizon = 500; % 1.5sec
+% Best: 700
+Horizon = 800; % 1.5sec
 
 % Number of Iterations
-num_iter = 200;
+% Best: 200
+num_iter = 250;
 
 % Discretization
-dt = 0.01;	% .01 * 300 = 3 seconds
+dt = 0.001;	% .01 * 300 = 3 seconds
 
 
 % Weight in Final State: (part of terminal cost)
 Q_f = zeros(2,2);
-Q_f(1,1) = 10; 	%Penalize more w.r.t errors in theta
-Q_f(2,2) = 1;     %Penalize more w.r.t errors in theta_dot
+Q_f(1,1) = 100; 	%Penalize more w.r.t errors in theta
+Q_f(2,2) = 10;     %Penalize more w.r.t errors in theta_dot
 
 
-% Weight in the Control:
-R = 0.01 * eye(1,1); % Weight control equally
+% Weight in the Control: 
+% Best: 1
+R = 1 * eye(1,1); % Weight control equally
 
 
 % Initial Configuration: (Initial state)
@@ -64,8 +67,16 @@ x_traj = zeros(2,Horizon);
 p_target(1,1) = pi;     % theta
 p_target(2,1) = 0;      % theta_dot
 
-% Learning Rate
-gamma = 0.01; 
+% Learning Rate .5
+gamma = 0.5;
+
+%Initialize Q Value Function
+Q = zeros(1,Horizon);
+Q_x = zeros(2,Horizon);
+Q_u = zeros(1,Horizon);
+Q_xx = zeros(2,2,Horizon);
+Q_uu = zeros(1,1,Horizon);
+Q_ux = zeros(1,2,Horizon);
  
  
 for k = 1:num_iter % Run for a certain number of iterations
@@ -101,19 +112,19 @@ V(Horizon) = 0.5 * (x_traj(:,Horizon) - p_target)' * Q_f * (x_traj(:,Horizon) - 
 %------------------------------------------------> Backpropagation of the Value Function
 for j = (Horizon-1):-1:1
 		 
-	 H = R_k(:,:,j) + B(:,:,j)' * Vxx(:,:,j+1) * B(:,:,j);
-	 G = P_k(:,:,j) + B(:,:,j)' * Vxx(:,:,j+1) * A(:,:,j);   %Feedback Gain
-	 g_ = r_k(:,j) +  B(:,:,j)' * Vx(:,j+1);
+	 Q(:,j) = l0 + V(:,j+1);
+     Q_x(:,j) = l_x + A(:,:,j)'*Vx(:,j+1);
+     Q_u(:,j) = l_u + B(:,:,j)'*Vx(:,j+1);
+     Q_xx(:,:,j) = l_xx + A(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
+     Q_uu(:,:,j) = l_uu + B(:,:,j)'*Vxx(:,:,j+1)*B(:,:,j);
+     Q_ux(:,:,j) = l_ux + B(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
+     
+	 L_k(:,:,j)= - inv(Q_uu(:,:,j))*Q_ux(:,:,j);   % Feedback term
+	 l_k (:,j) = - inv(Q_uu(:,:,j))*Q_u(:,j);    % Feedforward term
 	 
- 
-	 inv_H = inv(H);
-	 L_k(:,:,j)= - inv_H * G;   % Feedback term
-	 l_k (:,j) = - inv_H *g_;    % Feedforward term
-	 
-
-	 Vxx(:,:,j) = Q_k(:,:,j)+ A(:,:,j)' * Vxx(:,:,j+1) * A(:,:,j) + L_k(:,:,j)' * H * L_k(:,:,j) + L_k(:,:,j)' * G + G' * L_k(:,:,j);
-	 Vx(:,j)= q_k(:,j) +  A(:,:,j)' *  Vx(:,j+1) + L_k(:,:,j)' * g_ + G' * l_k(:,j) + L_k(:,:,j)'*H * l_k(:,j);
-	 V(:,j) = q0(j) + V(j+1)   +   0.5 *  l_k (:,j)' * H * l_k (:,j) + l_k (:,j)' * g_;
+	 Vxx(:,:,j) = Q_xx(:,:,j) - Q_ux(:,:,j)'*inv(Q_uu(:,:,j))*Q_ux(:,:,j);
+	 Vx(:,j)= Q_x(:,j) - Q_ux(:,:,j)'*inv(Q_uu(:,:,j))*Q_u(:,j);
+	 V(:,j) = Q(:,j) - 0.5*Q_u(:,j)'*inv(Q_uu(:,:,j))*Q_u(:,j);
 end 
 
 
@@ -139,8 +150,6 @@ fprintf('iLQG Iteration %d,  Current Cost = %e \n',k,Cost(1,k));
  
  
 end
-
-
 
 time(1)=0;
 for i= 2:Horizon

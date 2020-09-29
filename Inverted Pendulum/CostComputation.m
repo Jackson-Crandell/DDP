@@ -1,4 +1,4 @@
-function [Cost] =  fnCostComputation(x_traj,u_new,p_target,dt,Q_f,R)
+function [Cost] =  CostComputation(x_traj,u_new,p_target,dt,Q_f,R)
 
 
  [numOfStates,Horizon] = size(x_traj);
