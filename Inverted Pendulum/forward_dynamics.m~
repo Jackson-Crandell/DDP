@@ -1,0 +1,8 @@
+function [dx] = forward_dynamics(x,u, dt)
+
+Fx(1,1) = x(2,k); %Theta1_dot
+Fx(2,1) = (-b/I)*x(2,k)-((m*g*l)/I)*sin(x(1,k));
+
+G_x(2,1) = (1/I)*u_new;
+
+Fx * dt + G_x * u_new(:,k)
