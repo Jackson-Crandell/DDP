@@ -40,8 +40,8 @@ dt = 0.005;	% .01 * 300 = 3 seconds
 
 % Weight in Final State: (part of terminal cost)
 Q_f = zeros(2,2);
-Q_f(1,1) = 1; 	%Penalize more w.r.t errors in theta
-Q_f(2,2) = 1;      %Penalize more w.r.t errors in theta_dot
+Q_f(1,1) = 100; 	%Penalize more w.r.t errors in theta
+Q_f(2,2) = 10;      %Penalize more w.r.t errors in theta_dot
 
 
 %  Weight in the state (for running cost)
@@ -70,7 +70,7 @@ x_traj = zeros(2,Horizon);
 
 % Target: (Terminal States)
 p_target(1,1) = pi;     % theta
-p_target(2,1) = 0;      % theta_dot
+p_target(2,1) = 0;     % theta_dot
 
 % Learning Rate .5
 gamma = 0.5;

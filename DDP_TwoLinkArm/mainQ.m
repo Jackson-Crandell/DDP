@@ -98,17 +98,6 @@ p_target(4,1) = 0; %Theta2_dot (velocity is zero)
 
 % Learning Rate:c
 gamma = 0.5;
-
-numControls = 2;
-numStates = 4;
-
-%Initialize Q Value Function
-Q = zeros(1,Horizon);
-Q_x = zeros(numStates,Horizon);
-Q_u = zeros(numControls,Horizon);
-Q_xx = zeros(numStates,numStates,Horizon);
-Q_uu = zeros(numControls,numControls,Horizon);
-Q_ux = zeros(numControls,numStates,Horizon);
  
  
 for k = 1:num_iter % Run for a certain number of iterations

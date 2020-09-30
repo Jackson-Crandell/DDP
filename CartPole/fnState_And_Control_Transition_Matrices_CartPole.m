@@ -1,9 +1,7 @@
-function [A,B,C,D] = fnState_And_Control_Transition_Matrices_CartPole(x,u)
+function [A,B] = fnState_And_Control_Transition_Matrices_CartPole(x,u)
 
 global m_c;
 global m_p;
-global b;
-global I;
 global g;
 global l;
 
@@ -13,7 +11,6 @@ x3 = x(3,1);
 x4 = x(4,1);
 
 u1 = u(1,1);
-u2 = u(2,1);
 
 A = zeros(4,4);
 A(1,2) = x2; 
@@ -28,15 +25,6 @@ B = zeros(4,1);
 B(2,1) = 1/(m_c + m_p*sin(x3).^2);
 B(4,1) = -cos(x3)/(l*(m_c + m_p *sin(x3).^2));
 
-
-B = zeros(4,1);
-B(2,1) = (I+m*l^2)/p;
-B(4,1) = m*l/p;
-
-C = [1 0 0 0;
-     0 0 1 0];
-D = [0;
-     0];
 
 
 

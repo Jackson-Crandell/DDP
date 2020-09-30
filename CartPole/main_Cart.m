@@ -36,7 +36,7 @@ Q_f(3,3) = 10;    	%Penalize less for errors in velocity
 Q_f(4,4) = 10;
 
 % Weight in the Control:
-R = 10 * eye(2,2); 	% Weight control equally
+R = 10 * eye(1,1); 	% Weight control equally
 
 % Initial Configuration: (Initial state)
 xo = zeros(4,1);
@@ -46,8 +46,8 @@ xo(3,1) = 0;
 xo(4,1) = 0;
 
 % Initial Control:
-u_k = zeros(2,Horizon-1);	% Horizon -1 b/c at last time step we have no control
-du_k = zeros(2,Horizon-1);
+u_k = zeros(1,Horizon-1);	% Horizon -1 b/c at last time step we have no control
+du_k = zeros(1,Horizon-1);
 
 
 % Initial trajectory:
@@ -63,14 +63,6 @@ p_target(4,1) = 0;          % theta_dot (angular velocity of the pole)
 
 % Learning Rate:c
 gamma = 0.5; 
-
-%Initialize Q Value Function
-Q = zeros(1,Horizon);
-Q_x = zeros(4,Horizon);
-Q_u = zeros(2,Horizon);
-Q_xx = zeros(4,4,Horizon);
-Q_uu = zeros(2,2,Horizon);
-Q_ux = zeros(2,4,Horizon);
  
 for k = 1:num_iter 	%Run for a certain number of iterations
 
@@ -82,7 +74,7 @@ for  j = 1:(Horizon-1) 	%Discretize trajectory for each timestep
 	[dfx,dfu] = fnState_And_Control_Transition_Matrices_CartPole(x_traj(:,j),u_k(:,j));
 
 	% Quadratic expansion of the running cost around the x_trajectory (nominal) and u_k which is the nominal control
-	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
+	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
 	L0(j) = dt * l0; 			% zero order term (scalar)
 	Lx(:,j) = dt * l_x; 		% gradient of running cost w.r.t x (vector)
 	Lxx(:,:,j) = dt * l_xx; 	% Hessian of running cost w.r.t x (matrix)
@@ -134,8 +126,8 @@ u_k = u_new; 	%Update nominal trajectory (u_k) for new updated controls
 
 
 %---------------------------------------------> Simulation of the Nonlinear System
-[x_traj] = fnsimulate(xo,u_new,Horizon,dt,0);	 %Create new nominal trajectory based on new control (u_new)
-[Cost(:,k)] =  fnCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
+[x_traj] = fsimulate(xo,u_new,Horizon,dt,0);	 %Create new nominal trajectory based on new control (u_new)
+[Cost(:,k)] =  fCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
 x1(k,:) = x_traj(1,:);
  
 
