@@ -104,19 +104,21 @@ V(Horizon) = 0.5 * (x_traj(:,Horizon) - p_target)' * Q_f * (x_traj(:,Horizon) - 
 %------------------------------------------------> Backpropagation of the Value Function
 for j = (Horizon-1):-1:1
 		 
-	 Q(:,j) = L0(j) + V(:,j+1);
-     Q_x(:,j) = Lx(:,j) + A(:,:,j)'*Vx(:,j+1);
-     Q_u(:,j) = Lu(:,j) + B(:,:,j)'*Vx(:,j+1);
-     Q_xx(:,:,j) = Lxx(:,:,j) + A(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
-     Q_uu(:,:,j) = Luu(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*B(:,:,j);
-     Q_ux(:,:,j) = Lux(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
+	 Q = L0(j) + V(:,j+1);
+     Q_x = Lx(:,j) + A(:,:,j)'*Vx(:,j+1);
+     Q_xx = Lxx(:,:,j) + A(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
+     Q_u  = Lu(:,j) + B(:,:,j)'*Vx(:,j+1);
+     Q_uu = Luu(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*B(:,:,j);
+     Q_ux = Lux(:,:,j) + B(:,:,j)'*Vxx(:,:,j+1)*A(:,:,j);
      
-	 L_k(:,:,j)= - inv(Q_uu(:,:,j))*Q_ux(:,:,j);   % Feedback term
-	 l_k (:,j) = - inv(Q_uu(:,:,j))*Q_u(:,j);    % Feedforward term
+     inv_Q_uu = inv(Q_uu);
+	 L_k(:,:,j)= - inv_Q_uu*Q_ux;   % Feedback term
+	 l_k (:,j) = - inv_Q_uu*Q_u;    % Feedforward term
 	 
-	 Vxx(:,:,j) = Q_xx(:,:,j) - Q_ux(:,:,j)'*inv(Q_uu(:,:,j))*Q_ux(:,:,j);
-	 Vx(:,j)= Q_x(:,j) - Q_ux(:,:,j)'*inv(Q_uu(:,:,j))*Q_u(:,j);
-	 V(:,j) = Q(:,j) - 0.5*Q_u(:,j)'*inv(Q_uu(:,:,j))*Q_u(:,j);
+	 Vxx(:,:,j) = Q_xx - Q_ux'*inv_Q_uu*Q_ux;
+	 Vx(:,j)= Q_x - Q_ux'*inv_Q_uu*Q_u;
+	 V(:,j) = Q - 0.5*Q_u'*inv_Q_uu*Q_u;
+     
 end 
 
 

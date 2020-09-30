@@ -21,7 +21,7 @@ global b;
 
 g = 9.81;       % gravity 
 m = 2;        % Mass of the pendulum 
-l = 0.3;        % length of pendulum
+l = 1;        % length of pendulum
 b = 0.1;        % damping coefficient
 I = m*(l.^2);   % inertia 
 

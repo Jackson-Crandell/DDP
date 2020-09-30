@@ -1,8 +1,0 @@
-function  [l0,l_x,l_xx,l_u,l_uu,l_ux] = rCost(x, u, k,R,dt)
-
-l0 = 0.5*(u'*R*u + (x - target)'*P*(x - target));
-l_x = P*(x - target)
-l_xx = P; 
-l_u = R * u;
-l_uu = R;
-l_ux = zeros(2,2);

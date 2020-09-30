@@ -1,36 +1,38 @@
-function [A,B,C,c] = fnState_And_Control_Transition_Matrices_CartPole(x,u)
+function [A,B,C,D] = fnState_And_Control_Transition_Matrices_CartPole(x,u)
 
-global M;
-global m;
+global m_c;
+global m_p;
 global b;
 global I;
 global g;
 global l;
 
-M = .5;
-m = 0.2;
-b = 0.1;
-I = 0.006;
-g = 9.81;
-l = 0.3;
+x1 = x(1,1);
+x2 = x(2,1);
+x3 = x(3,1);
+x4 = x(4,1);
 
-p = I*(M+m)+M*m*l^2; %denominator in the A and B matrices
-
- B_ = [     0;
-     (I+m*l^2)/p;
-          0;
-        m*l/p];
+u1 = u(1,1);
+u2 = u(2,1);
 
 A = zeros(4,4);
-A(1,2) = 1;
-A(2,2) = -(I+m*l^2)*b/p;
-A(2,3) = (m^2*g*l^2)/p;
-A(4,2) = -(m*l*b)/p ;
-A(3,4) = 1;
-A(4,3) = m*g*l*(M+m)/p;
+A(1,2) = x2; 
+A(2,3) = (m_p*(cos(x3)*(l*(x4)^2+g*cos(x3))-g*sin(x3).^2)*(m_c+m_p*sin(x3).^2)-m_p*sin(2*x3)*sin(x3)*(l*(x4).^2+g*cos(x3))) / (m_c+m_p*sin(x3).^2).^2;
+A(3,4) = x4;
+A(4,3) = (-m_p*sin(2*(x3))*(-l*m_p*(x4.^2)*sin(2*x3)-2*g*sin(x3)*(m_c+m_p)) + 2*(-l*m_p*(x4.^2)*cos(2*x3) - g*cos(x3)*(m_c + m_p))*(m_c+m_p*sin(x3).^2)) / (2*l*(m_c+m_p*sin(x3).^2));
+A(2,4) = (2*m_p*sin(x3)*l*x4) / (m_c + m_p*sin(x3).^2);
+A(4,4) = (-2 * m_p*x4*sin(2*x3)) / (m_c + m_p *sin(x3).^2);
+
+
+B = zeros(4,1);
+B(2,1) = 1/(m_c + m_p*sin(x3).^2);
+B(4,1) = -cos(x3)/(l*(m_c + m_p *sin(x3).^2));
+
+
 B = zeros(4,1);
 B(2,1) = (I+m*l^2)/p;
 B(4,1) = m*l/p;
+
 C = [1 0 0 0;
      0 0 1 0];
 D = [0;
