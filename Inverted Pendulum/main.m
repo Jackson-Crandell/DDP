@@ -43,7 +43,7 @@ Q_f(2,2) = 1;     %Penalize more w.r.t errors in theta_dot
 
 
 % Weight in the Control:
-R = 0.01 * eye(1,1); % Weight control equally
+R = 10 * eye(1,1); % Weight control equally
 
 
 % Initial Configuration: (Initial state)

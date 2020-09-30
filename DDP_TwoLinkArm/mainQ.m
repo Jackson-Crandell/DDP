@@ -8,80 +8,107 @@
 clear all;
 close all;
 
-% Variables for the inverted pendulum
-global g;
-global m; 
-global l; 
-global I; 
-global b; 
+% Variables for 2D arm
+global m1;
+global m2;
+global s1;
+global s2;
+global I1;
+global I2;
+global b1;
+global b2;
+global b1_2;
+global b2_1;
+global d1;
+global d2;
+global d3;
 
+% 2D Link Model Parameter
+% masses in Kgr
+ m1 = 1.4;
+ m2 = 1.1;
+ 
+ 
+% Friction Coefficients
+b1 = 0;
+b2 = b1;
+b1_2 = 0;
+b2_1 = 0;
 
-% Sample parameters of choice as used in
-% http://ctms.engin.umich.edu/CTMS/index.php?example=InvertedPendulum&section=SystemModeling
+% length parameters in meters
+ l1 = 0.3;
+ l2 = 0.33;
+ 
+% Inertia in Kgr * m^2
+ I1 = 0.025;
+ I2 = 0.045;
+ 
+ s1 = 0.11;
+ s2 = 0.16;
 
-g = 9.81;       % gravity 
-m = 2;        % Mass of the pendulum 
-l = 0.3;        % length of pendulum
-b = 0.1;        % damping coefficient
-I = m*(l.^2);   % inertia 
+ d1 = I1+ I2 + m2 * l1^2;
+ d2 = m2 * l1 * s2;
+ d3 = I2;
 
 
 % Horizon 
-% Best: 700
-Horizon = 500; % 1.5sec
+Horizon = 400; % 1.5sec
 
 % Number of Iterations
-% Best: 200
 num_iter = 100;
 
 % Discretization
-dt = 0.005;	% .01 * 300 = 3 seconds
-
+dt = 0.01; % .01 * 300 = 3 seconds
 
 % Weight in Final State: (part of terminal cost)
-Q_f = zeros(2,2);
-Q_f(1,1) = 1; 	%Penalize more w.r.t errors in theta
-Q_f(2,2) = 1;      %Penalize more w.r.t errors in theta_dot
+Q_f = zeros(4,4);
+Q_f(1,1) = 100; %Penalize more w.r.t errors in position
+Q_f(2,2) = 100;
+Q_f(3,3) = 10; %Penalize less for errors in velocity
+Q_f(4,4) = 10;
 
+% Weight in the Control:
+R = 10 * eye(2,2); % Weight control equally
 
 %  Weight in the state (for running cost)
 P = zeros(2,2); 
 P(1,1) = 10;
 P(2,2) = 10;
 
-% Weight in the Control: 
-% Best: 1
-R = 10* eye(1,1); % Weight control equally
-
-
 % Initial Configuration: (Initial state)
-xo = zeros(2,1);
+xo = zeros(4,1);
 xo(1,1) = 0;
 xo(2,1) = 0;
 
-
 % Initial Control:
-u_k = zeros(1,Horizon-1);   % Horizon -1 b/c at last time step we have no control
-du_k = zeros(1,Horizon-1);
+u_k = zeros(2,Horizon-1); % Horizon -1 b/c at last time step we have no control
+du_k = zeros(2,Horizon-1);
 
 
 % Initial trajectory:
-x_traj = zeros(2,Horizon);
+x_traj = zeros(4,Horizon);
+ 
 
 % Target: (Terminal States)
-p_target(1,1) = pi;     % theta
-p_target(2,1) = 0;      % theta_dot
+p_target(1,1) = pi/6; %Theta1
+p_target(2,1) = pi/4; %Theta2
+p_target(3,1) = 0; %Theta1_dot
+p_target(4,1) = 0; %Theta2_dot (velocity is zero)
 
-% Learning Rate .5
+
+% Learning Rate:c
 gamma = 0.5;
+
+numControls = 2;
+numStates = 4;
 
 %Initialize Q Value Function
 Q = zeros(1,Horizon);
-Q_x = zeros(2,Horizon);
-Q_u = zeros(1,Horizon);
-Q_xx = zeros(2,2,Horizon);
-Q_uu = zeros(1,1,Horizon);
-Q_ux = zeros(1,2,Horizon);
+Q_x = zeros(numStates,Horizon);
+Q_u = zeros(numControls,Horizon);
+Q_xx = zeros(numStates,numStates,Horizon);
+Q_uu = zeros(numControls,numControls,Horizon);
+Q_ux = zeros(numControls,numStates,Horizon);
  
  
 for k = 1:num_iter % Run for a certain number of iterations
@@ -91,10 +118,10 @@ for k = 1:num_iter % Run for a certain number of iterations
 for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
 
     % linearization of dynamics (Jacobians dfx and dfu)
-    [dfx, dfu] = Jacobians(x_traj(:,j),u_k(:,j));
+     [dfx,dfu,C(:,:,j),c(:,:,j)] = fnState_And_Control_Transition_Matrices(x_traj(:,j),u_k(:,j),du_k(:,j),dt);
 
     % Quadratic expansion of the running cost around the x_trajectory (nominal) and u_k which is the nominal control
-    [l0,l_x,l_xx,l_u,l_uu,l_ux] = rCost(x_traj(:,j), u_k(:,j), j,R,P,p_target, dt);    % for each time step compute the cost
+     [l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j),j,R,dt);    % for each time step compute the cost
 
     L0(j) = dt * l0;            % zero order term (scalar)
     Lx(:,j) = dt * l_x;        % gradient of running cost w.r.t x (vector)
@@ -104,7 +131,7 @@ for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
     Luu(:,:,j) = dt * l_uu;     % Hessian of running cost w.r.t u (matrix)
     Lux(:,:,j) = dt * l_ux;     % Hessian of running cost w.r.t ux (matrix)
 
-    A(:,:,j) = eye(1,1) + dfx * dt;     % This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
+    A(:,:,j) = eye(4,4) + dfx * dt;     % This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
     B(:,:,j) = dfu * dt;                % B matrix in notes is the linearized contols
 
     %dx = forward_dynamics(x_traj(:,j),u_k(:,j), dt);
@@ -136,12 +163,12 @@ for j = (Horizon-1):-1:1
 	 Vxx(:,:,j) = Q_xx - Q_ux'*inv_Q_uu*Q_ux;
 	 Vx(:,j)= Q_x - Q_ux'*inv_Q_uu*Q_u;
 	 V(:,j) = Q - 0.5*Q_u'*inv_Q_uu*Q_u;
-     %V(:,j) = Q(:,j);
+
 end 
 
 
 %----------------------------------------------> Find the controls
-dx = zeros(2,1);    % dx is initially zero because we start from the same point
+dx = zeros(4,1);    % dx is initially zero because we start from the same point
 
 for i=1:(Horizon-1)    
 	 du = l_k(:,i) + L_k(:,:,i) * dx;   	%Feedback Controller 
@@ -153,8 +180,8 @@ u_k = u_new;    %Update nominal trajectory (u_k) for new updated controls
 
 
 %---------------------------------------------> Simulation of the Nonlinear System
-[x_traj] = simulate(xo,u_new,Horizon,dt,0);   %Create new nominal trajectory based on new control (u_new)
-[Cost(:,k)] =  CostComputation(x_traj,u_k,p_target,dt,Q_f,R);
+[x_traj] = fnsimulate(xo,u_new,Horizon,dt,0);   %Create new nominal trajectory based on new control (u_new)
+[Cost(:,k)] =  fnCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
 x1(k,:) = x_traj(1,:);
  
 
@@ -170,34 +197,43 @@ end
 
 
 figure(1);
-subplot(2,2,1)
+subplot(3,2,1)
 hold on
-plot(time,x_traj(1,:),'linewidth',4);  
+plot(time,x_traj(1,:),'linewidth',4);
 plot(time,p_target(1,1)*ones(1,Horizon),'red','linewidth',4)
-title('Theta 1','fontsize',20); 
+title('Theta 1','fontsize',20);
 xlabel('Time in sec','fontsize',20)
 hold off;
 grid;
 
-subplot(2,2,2);hold on;
-plot(time,x_traj(2,:),'linewidth',4); 
+
+subplot(3,2,2);hold on;
+plot(time,x_traj(2,:),'linewidth',4);
 plot(time,p_target(2,1)*ones(1,Horizon),'red','linewidth',4)
-title('Theta dot','fontsize',20);
+title('Theta 2','fontsize',20);
 xlabel('Time in sec','fontsize',20)
 hold off;
 grid;
 
-subplot(2,2,3);hold on
-plot(Cost,'linewidth',2); 
+subplot(3,2,3);hold on
+plot(time,x_traj(3,:),'linewidth',4);
+plot(time,p_target(3,1)*ones(1,Horizon),'red','linewidth',4)
+title('Theta 1 dot','fontsize',20)
+xlabel('Time in sec','fontsize',20)
+hold off;
+grid;
+
+subplot(3,2,4);hold on
+plot(time,x_traj(4,:),'linewidth',4);
+plot(time,p_target(4,1)*ones(1,Horizon),'red','linewidth',4)
+title('Theta 2 dot','fontsize',20)
+xlabel('Time in sec','fontsize',20)
+hold off;
+grid;
+
+subplot(3,2,5);hold on
+plot(Cost,'linewidth',2);
 xlabel('Iterations','fontsize',20)
 title('Cost','fontsize',20);
 %save('DDP_Data');
-
-
-subplot(2,2,4);hold on;
-plot(time(1:end-1),u_k,'linewidth',4); 
-title('U','fontsize',20);
-xlabel('Time in sec','fontsize',20)
-hold off;
-grid;
 

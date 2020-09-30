@@ -8,80 +8,99 @@
 clear all;
 close all;
 
-% Variables for the inverted pendulum
-global g;
-global m; 
-global l; 
-global I; 
-global b; 
+% Variables for 2D arm
+global m1;
+global m2;
+global s1;
+global s2;
+global I1;
+global I2;
+global b1;
+global b2;
+global b1_2;
+global b2_1;
+global d1;
+global d2;
+global d3;
 
+% 2D Link Model Parameter
+% masses in Kgr
+ m1 = 1.4;
+ m2 = 1.1;
+ 
+ 
+% Friction Coefficients
+b1 = 0;
+b2 = b1;
+b1_2 = 0;
+b2_1 = 0;
 
-% Sample parameters of choice as used in
-% http://ctms.engin.umich.edu/CTMS/index.php?example=InvertedPendulum&section=SystemModeling
+% length parameters in meters
+ l1 = 0.3;
+ l2 = 0.33;
+ 
+% Inertia in Kgr * m^2
+ I1 = 0.025;
+ I2 = 0.045;
+ 
+ s1 = 0.11;
+ s2 = 0.16;
 
-g = 9.81;       % gravity 
-m = 2;        % Mass of the pendulum 
-l = 0.3;        % length of pendulum
-b = 0.1;        % damping coefficient
-I = m*(l.^2);   % inertia 
+ d1 = I1+ I2 + m2 * l1^2;
+ d2 = m2 * l1 * s2;
+ d3 = I2;
 
 
 % Horizon 
-% Best: 700
-Horizon = 500; % 1.5sec
-
+Horizon = 300; % 1.5sec
 % Number of Iterations
-% Best: 200
-num_iter = 100;
+num_iter = 100
 
 % Discretization
-dt = 0.005;	% .01 * 300 = 3 seconds
-
+dt = 0.01; % .01 * 300 = 3 seconds
 
 % Weight in Final State: (part of terminal cost)
-Q_f = zeros(2,2);
-Q_f(1,1) = 1; 	%Penalize more w.r.t errors in theta
-Q_f(2,2) = 1;      %Penalize more w.r.t errors in theta_dot
+Q_f = zeros(4,4);
+Q_f(1,1) = 100; %Penalize more w.r.t errors in position
+Q_f(2,2) = 100;
+Q_f(3,3) = 10; %Penalize less for errors in velocity
+Q_f(4,4) = 10;
 
-
-%  Weight in the state (for running cost)
-P = zeros(2,2); 
-P(1,1) = 10;
-P(2,2) = 10;
-
-% Weight in the Control: 
-% Best: 1
-R = 10* eye(1,1); % Weight control equally
-
+% Weight in the Control:
+R = 10 * eye(2,2); % Weight control equally
 
 % Initial Configuration: (Initial state)
-xo = zeros(2,1);
+xo = zeros(4,1);
 xo(1,1) = 0;
 xo(2,1) = 0;
 
-
 % Initial Control:
-u_k = zeros(1,Horizon-1);   % Horizon -1 b/c at last time step we have no control
-du_k = zeros(1,Horizon-1);
+u_k = zeros(2,Horizon-1); % Horizon -1 b/c at last time step we have no control
+du_k = zeros(2,Horizon-1);
 
 
 % Initial trajectory:
-x_traj = zeros(2,Horizon);
+x_traj = zeros(4,Horizon);
+ 
 
 % Target: (Terminal States)
-p_target(1,1) = pi;     % theta
-p_target(2,1) = 0;      % theta_dot
+p_target(1,1) = pi/4; %Theta1
+p_target(2,1) = pi/6; %Theta2
+p_target(3,1) = 0; %Theta1_dot
+p_target(4,1) = 0; %Theta2_dot (velocity is zero)
 
-% Learning Rate .5
+
+% Learning Rate:c
 gamma = 0.5;
 
+num
 %Initialize Q Value Function
 Q = zeros(1,Horizon);
-Q_x = zeros(2,Horizon);
-Q_u = zeros(1,Horizon);
-Q_xx = zeros(2,2,Horizon);
-Q_uu = zeros(1,1,Horizon);
-Q_ux = zeros(1,2,Horizon);
+Q_x = zeros(4,Horizon);
+Q_u = zeros(2,Horizon);
+Q_xx = zeros(4,4,Horizon);
+Q_uu = zeros(2,2,Horizon);
+Q_ux = zeros(2,4,Horizon);
  
  
 for k = 1:num_iter % Run for a certain number of iterations
@@ -136,7 +155,7 @@ for j = (Horizon-1):-1:1
 	 Vxx(:,:,j) = Q_xx - Q_ux'*inv_Q_uu*Q_ux;
 	 Vx(:,j)= Q_x - Q_ux'*inv_Q_uu*Q_u;
 	 V(:,j) = Q - 0.5*Q_u'*inv_Q_uu*Q_u;
-     %V(:,j) = Q(:,j);
+
 end 
 
 
