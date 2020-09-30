@@ -7,7 +7,7 @@ Fa = [
     x(2);
     (m_p * sin(x(3)) * (l * (x(4) ^ 2) + g * cos(x(3)))) / den;
     x(4);
-    (- m_p * l * (x(4) ^ 2) * cos(x(3)) * sin(x(3)) - (mc + m_p) * g * sin(x(3))) / (l * den)
+    (- m_p * l * (x(4) ^ 2) * cos(x(3)) * sin(x(3)) - (m_c + m_p) * g * sin(x(3))) / (l * den)
 ];
 
 Fb = [0; u / den; 0; (-u * cos(x(3))) / (l * den)];

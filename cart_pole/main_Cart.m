@@ -61,7 +61,7 @@ p_target(3,1) = pi;         % theta     (angular position of pole)
 p_target(4,1) = 0;          % theta_dot (angular velocity of the pole)
 
 
-% Learning Rate:c
+% Learning Rate
 gamma = 0.4; 
 
 syms x1 x2 x3 x4 u

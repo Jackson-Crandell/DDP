@@ -23,7 +23,7 @@ l = 0.25;  		% length of the pole
 Horizon = 800; % 1.5sec
 
 % Number of Iterations
-num_iter = 300;
+num_iter = 90;
 
 % Discretization
 dt = 0.01; % .01 * 300 = 3 seconds
@@ -72,24 +72,6 @@ F = [  x2,
         (-m_p*l*(x4.^2)*cos(x3)*sin(x3) - (m_c + m_p)*g*sin(x3) - cos(x3)*u)./(l*(m_c + m_p*(sin(x3).^2)))
 ]; 
 
-% x = sym('x', [1 4]); % State vector.
-% u = sym('u');
-% 
-% den = (m_c + m_p * sin(x(3)) ^ 2);
-% Fa = [
-%     x(2);
-%     (m_p * sin(x(3)) * (l * (x(4) ^ 2) + g * cos(x(3)))) / den;
-%     x(4);
-%     (- m_p * l * (x(4) ^ 2) * cos(x(3)) * sin(x(3)) - (m_c + m_p) * g * sin(x(3))) / (l * den)
-% ];
-% 
-% Fb = [0; u / den; 0; (-u * cos(x(3))) / (l * den)];
-
-% System dynamics F(x,u).
-% F = Fa + Fb;
-
-
-
 dynamicsf = matlabFunction(F);
 dFx = matlabFunction(jacobian(F, [x1; x2; x3; x4]));
 dFu = matlabFunction(jacobian(F, [u]));
@@ -101,10 +83,10 @@ for k = 1:num_iter 	%Run for a certain number of iterations
 for  j = 1:(Horizon-1) 	%Discretize trajectory for each timestep
 	 
 	% linearization of dynamics (Jacobians dfx and dfu)
-    [dfx,dfu] = fnState_And_Control_Transition_Matrices_CartPole(x_traj(:,j),u_k(:,j),dFx, dFu);
+    [dfx,dfu] = Jacobians(x_traj(:,j),u_k(:,j),dFx, dFu);
 
 	% Quadratic expansion of the running cost around the x_trajectory (nominal) and u_k which is the nominal control
-	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
+	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
 	L0(j) = dt * l0; 			% zero order term (scalar)
 	Lx(:,j) = dt * l_x; 		% gradient of running cost w.r.t x (vector)
 	Lxx(:,:,j) = dt * l_xx; 	% Hessian of running cost w.r.t x (matrix)
@@ -156,8 +138,8 @@ u_k = u_new; 	%Update nominal trajectory (u_k) for new updated controls
 
 
 %---------------------------------------------> Simulation of the Nonlinear System
-[x_traj] = fsimulate(xo,u_new,Horizon,dt,0,dynamicsf);	 %Create new nominal trajectory based on new control (u_new)
-[Cost(:,k)] =  fCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
+[x_traj] = fnsimulate(xo,u_new,Horizon,dt,0,dynamicsf);	 %Create new nominal trajectory based on new control (u_new)
+[Cost(:,k)] =  fnCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
 %x1(k,:) = x_traj(1,:);
  
 
@@ -169,6 +151,10 @@ end
 time(1)=0;
 for i= 2:Horizon
 	time(i) =time(i-1) + dt;  
+end
+
+for k=1:5:Horizon
+    drawCartpend(x_traj(:,k),m_p,m_c,l);
 end
 
 figure(1);
