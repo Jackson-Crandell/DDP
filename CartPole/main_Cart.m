@@ -23,7 +23,11 @@ l = 0.25;  		% length of the pole
 Horizon = 800; % 1.5sec
 
 % Number of Iterations
-num_iter = 500;
+num_iter = 90;
+
+% Obtain expressions for F, Fx, Fu, & Fb.
+dynamics = fnDynamics(m_c, m_p, l, g);
+dynamics;
 
 % Discretization
 dt = 0.01; % .01 * 300 = 3 seconds
@@ -36,7 +40,7 @@ Q_f(3,3) = 10;    	%Penalize less for errors in velocity
 Q_f(4,4) = 10;
 
 % Weight in the Control:
-R = 10 * eye(1,1); 	% Weight control equally
+R = 1 * eye(1,1); 	% Weight control equally
 
 % Initial Configuration: (Initial state)
 xo = zeros(4,1);
@@ -62,7 +66,7 @@ p_target(4,1) = 0;          % theta_dot (angular velocity of the pole)
 
 
 % Learning Rate:c
-gamma = 0.5; 
+gamma = 0.4; 
  
 for k = 1:num_iter 	%Run for a certain number of iterations
 
@@ -71,7 +75,7 @@ for k = 1:num_iter 	%Run for a certain number of iterations
 for  j = 1:(Horizon-1) 	%Discretize trajectory for each timestep
 	 
 	% linearization of dynamics (Jacobians dfx and dfu)
-	[dfx,dfu] = fnState_And_Control_Transition_Matrices_CartPole(x_traj(:,j),u_k(:,j));
+	[dfx,dfu] = fnState_And_Control_Transition_Matrices_CP(x_traj(:,j),u_k(:,j),du_k(:,j),dt, dynamics);
 
 	% Quadratic expansion of the running cost around the x_trajectory (nominal) and u_k which is the nominal control
 	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
@@ -126,7 +130,7 @@ u_k = u_new; 	%Update nominal trajectory (u_k) for new updated controls
 
 
 %---------------------------------------------> Simulation of the Nonlinear System
-[x_traj] = fsimulate(xo,u_new,Horizon,dt,0);	 %Create new nominal trajectory based on new control (u_new)
+[x_traj] = fsimulate(xo,u_new,Horizon,dt,dynamics,0);	 %Create new nominal trajectory based on new control (u_new)
 [Cost(:,k)] =  fCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
 x1(k,:) = x_traj(1,:);
  
