@@ -28,14 +28,14 @@ I = m*(l.^2);   % inertia
 
 % Horizon 
 % Best: 700
-Horizon = 500; % 1.5sec
+Horizon = 300; % 1.5sec
 
 % Number of Iterations
 % Best: 200
 num_iter = 100;
 
 % Discretization
-dt = 0.005;	% .01 * 300 = 3 seconds
+dt = 0.01;	% .01 * 300 = 3 seconds
 
 
 % Weight in Final State: (part of terminal cost)
@@ -46,12 +46,12 @@ Q_f(2,2) = 10;      %Penalize more w.r.t errors in theta_dot
 
 %  Weight in the state (for running cost)
 P = zeros(2,2); 
-P(1,1) = 10;
-P(2,2) = 10;
+P(1,1) = 0;
+P(2,2) = 0;
 
 % Weight in the Control: 
 % Best: 1
-R = 10* eye(1,1); % Weight control equally
+R = .1* eye(1,1); % Weight control equally
 
 
 % Initial Configuration: (Initial state)
@@ -104,7 +104,7 @@ for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
     Luu(:,:,j) = dt * l_uu;     % Hessian of running cost w.r.t u (matrix)
     Lux(:,:,j) = dt * l_ux;     % Hessian of running cost w.r.t ux (matrix)
 
-    A(:,:,j) = eye(1,1) + dfx * dt;     % This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
+    A(:,:,j) = eye(2) + dfx * dt;     % This is PHI in notes (Identity matrix) + gradient of dynamics w.r.t x * dt
     B(:,:,j) = dfu * dt;                % B matrix in notes is the linearized contols
 
     %dx = forward_dynamics(x_traj(:,j),u_k(:,j), dt);
@@ -195,9 +195,10 @@ title('Cost','fontsize',20);
 
 
 subplot(2,2,4);hold on;
-plot(time(1:end-1),u_k,'linewidth',4); 
-title('U','fontsize',20);
-xlabel('Time in sec','fontsize',20)
+title('Animation','fontsize',20);
+invPend_animation(x_traj);
 hold off;
 grid;
+
+invPend_animation(x_traj)
 
