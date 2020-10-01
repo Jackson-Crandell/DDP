@@ -158,8 +158,7 @@ for k=1:1:Horizon
     E(k) = getframe(gcf);
 end
 
-% Save Video
-E(1).cdata = E(1).cdata(:,1:1000,:); %Resize Array to make video
+E(1).cdata = E(1).cdata(:,1:1000,:); %Resize Array to m
 save_video = false;
 if (save_video)
     video = VideoWriter('CartPole.avi','Uncompressed AVI');
