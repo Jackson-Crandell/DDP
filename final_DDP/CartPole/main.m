@@ -8,13 +8,13 @@
 clear all;
 close all;
 
+save_video = false;
+
 % Variables for the cart-pole problem
 global g; 
 global m_c;
 global m_p; 
 global l; 
-
-save_video = false;
 
 g = 9.81;  		% gravity 
 m_c = 1.0; 		% mass of the cart
@@ -22,7 +22,7 @@ m_p = 0.01;		% mass of the pole
 l = 0.25;  		% length of the pole
 
 % Horizon 
-Horizon = 800; % 1.5sec
+Horizon = 800; 
 
 % Number of Iterations
 num_iter = 90;
@@ -63,7 +63,7 @@ p_target(3,1) = pi;         % theta     (angular position of pole)
 p_target(4,1) = 0;          % theta_dot (angular velocity of the pole)
 
 
-% Learning Rate:c
+% Learning Rate
 gamma = 0.4; 
 
 syms x1 x2 x3 x4 u
@@ -85,10 +85,10 @@ for k = 1:num_iter 	%Run for a certain number of iterations
 for  j = 1:(Horizon-1) 	%Discretize trajectory for each timestep
 	 
 	% linearization of dynamics (Jacobians dfx and dfu)
-    [dfx,dfu] = Jacobians(x_traj(:,j),u_k(:,j),dFx, dFu);
+    [dfx,dfu] = fnState_And_Control_Transition_Matrices_CartPole(x_traj(:,j),u_k(:,j),dFx, dFu);
 
 	% Quadratic expansion of the running cost around the x_trajectory (nominal) and u_k which is the nominal control
-	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
+	[l0,l_x,l_xx,l_u,l_uu,l_ux] = fCost(x_traj(:,j), u_k(:,j), j,R,dt); %for each time step compute the cost
 	L0(j) = dt * l0; 			% zero order term (scalar)
 	Lx(:,j) = dt * l_x; 		% gradient of running cost w.r.t x (vector)
 	Lxx(:,:,j) = dt * l_xx; 	% Hessian of running cost w.r.t x (matrix)
@@ -140,8 +140,8 @@ u_k = u_new; 	%Update nominal trajectory (u_k) for new updated controls
 
 
 %---------------------------------------------> Simulation of the Nonlinear System
-[x_traj] = fnsimulate(xo,u_new,Horizon,dt,0,dynamicsf);	 %Create new nominal trajectory based on new control (u_new)
-[Cost(:,k)] =  fnCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
+[x_traj] = fsimulate(xo,u_new,Horizon,dt,0,dynamicsf);	 %Create new nominal trajectory based on new control (u_new)
+[Cost(:,k)] =  fCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
 %x1(k,:) = x_traj(1,:);
  
 
