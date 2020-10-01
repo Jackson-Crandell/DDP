@@ -8,7 +8,7 @@ This repository implements Differential Dynamic Programming as a optimal control
   ![Convergence Graph](/media/InvPendGraph.png)
 
 # Demo of the CartPole System
-  ![Demo](CartPoleVideo.gif)
+  ![Demo](/media/CartPoleVideo.gif)
 
 # State Convergence Graphs for CartPole System
   ![Convergence Graph](/media/CartPole.png)
