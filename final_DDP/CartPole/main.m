@@ -14,6 +14,8 @@ global m_c;
 global m_p; 
 global l; 
 
+save_video = false;
+
 g = 9.81;  		% gravity 
 m_c = 1.0; 		% mass of the cart
 m_p = 0.01;		% mass of the pole
@@ -155,13 +157,14 @@ end
 
 for k=1:1:Horizon
     drawCartpend(x_traj(:,k),m_p,m_c,l);
-    E(k) = getframe(gcf);
+    if (save_video)
+        E(k) = getframe(gcf);
+    end
 end
 
 % Save Video
-E(1).cdata = E(1).cdata(:,1:1000,:); %Resize Array to make video
-save_video = false;
 if (save_video)
+    E(1).cdata = E(1).cdata(:,1:1000,:); %Resize Array to make video
     video = VideoWriter('CartPole.avi','Uncompressed AVI');
     open(video)
     writeVideo(video,E)

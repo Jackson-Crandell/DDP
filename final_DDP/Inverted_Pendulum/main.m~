@@ -201,37 +201,43 @@ hold off;
 grid;
 
 %% Testing Robustness of Inverted Pendulum
-num_traj = 10;
-x_new = zeros(2,Horizon);
+u_optimal = u_k;
+x_optimal = x_traj;
+gain_optimal = L_k;
+
+num_traj = 1
 x_star = x_traj;
 u_star = u_new;
 K_star = L_k;
-u = zeros(1,Horizon-1);
-x_new = fnsimulate(x_new,u_star,Horizon,dt,.001);
 
 for i = 1:num_traj
     for k = 1:Horizon-1
-        x_new = fnsimulate(x_new,u_star,Horizon,dt,.01);
-        u(k) = u_star(:,k) + K_star(:,:,k)*(x_new(:,k) - x_star(:,k));
+        u(k) = u_star(:,k) + L_k(:,:,k)*(x_new(:,k) - x_star(:,k));
     end
     
     [x_new] = fnsimulate(x_new,u,Horizon,dt,0);
-    
-    figure(1);
-    
+end
+
+figure(1);
 subplot(2,2,1)
 hold on
-plot(time,x_new(1,:),'linewidth',2);  
+plot(time,x_new(1,:),'linewidth',4);  
 plot(time,p_target(1,1)*ones(1,Horizon),'red','linewidth',4)
 title('Theta 1','fontsize',20); 
 xlabel('Time in sec','fontsize',20)
+hold off;
 grid;
 
 subplot(2,2,2);hold on;
-plot(time,x_new(2,:),'linewidth',2); 
+plot(time,x_new(2,:),'linewidth',4); 
 plot(time,p_target(2,1)*ones(1,Horizon),'red','linewidth',4)
 title('Theta dot','fontsize',20);
 xlabel('Time in sec','fontsize',20)
+hold off;
 grid;
-    
-end
+
+subplot(2,2,4);hold on;
+title('Animation','fontsize',20);
+invPend_animation(x_new,Horizon);
+hold off;
+grid;

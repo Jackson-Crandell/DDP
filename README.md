@@ -1,5 +1,5 @@
 # Differential Dynamic Programming (DDP)
-This repository implements Differential Dynamic Programming as a optimal control algorithm for two dynamical systems: the simple inverted pendulum and the cartpole system. 
+This repository implements Differential Dynamic Programming as a optimal control algorithm for three dynamical systems: the simple inverted pendulum, the cartpole system, and a two link arm. 
 
 ## Demo of Inverted Pendulum
   ![Demo](/media/InvPend.gif)
