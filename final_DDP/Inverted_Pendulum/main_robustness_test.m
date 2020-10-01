@@ -61,7 +61,7 @@ x_traj = zeros(2,Horizon);
 
 % Target: (Terminal States)
 p_target(1,1) = pi;     % theta
-p_target(2,1) = 0;      % theta_dot
+p_target(2,1) = 0;     % theta_dot
 
 % Learning Rate .5
 gamma = 0.5;
@@ -86,7 +86,6 @@ for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
     A(:,:,j) = eye(2) + dfx * dt;    
     B(:,:,j) = dfu * dt;     
     
-    
     % Quadratic expansion of the running cost around the x_traj (nominal trajectory) and u_k (nominal control)
     [l0,l_x,l_xx,l_u,l_uu,l_ux] = fnCost(x_traj(:,j), u_k(:,j), j,R,dt); 
 
@@ -96,7 +95,7 @@ for  j = 1:(Horizon-1) %Discretize trajectory for each timestep
 
     Lu(:,j) = dt * l_u;         
     Luu(:,:,j) = dt * l_uu;     
-    Lux(:,:,j) = dt * l_ux; 
+    Lux(:,:,j) = dt * l_ux;    
     
 end
 
@@ -141,14 +140,15 @@ end
 %Update nominal trajectory (u_k) for new updated controls
 u_k = u_new;    
 
-
 %---------------------------------------------> Simulation of the Nonlinear System
 %Create new nominal trajectory based on new control (u_new)
 [x_traj] = fnsimulate(xo,u_new,Horizon,dt,0);   
 [Cost(:,k)] =  fnCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
+x1(k,:) = x_traj(1,:);
  
 
 fprintf('iLQG Iteration %d,  Current Cost = %e \n',k,Cost(1,k));
+ 
  
 end
 
@@ -157,39 +157,64 @@ for i= 2:Horizon
 	time(i) =time(i-1) + dt;  
 end
 
+%---------------------------------------------> Implementation of Robustness Test Algorithm
+x_star = x_traj; 
+u_star = u_new; 
+K_star = L_k;
 
-figure(1);
-subplot(2,2,1);
-hold on;
-plot(time,x_traj(1,:),'linewidth',4);  
-plot(time,p_target(1,1)*ones(1,Horizon),'red','linewidth',4);
-title('$\theta$','Interpreter','latex','fontsize',24);
-xlabel('Time in sec','fontsize',20);
-ylabel('Rad','fontsize',20);
+x_new = zeros(2,Horizon);
+u = zeros(1,Horizon-1);
+num_traj = 20; 
 
-hold off;
-grid;
+for i = 1:num_traj
+    
+    [x_new,u_neww] = fnsimulate_noise(x_new,u_star,x_star,K_star,Horizon,dt,1.0);
+    [Cost(:,k)] =  fnCostComputation(x_new,u_neww,p_target,dt,Q_f,R);
 
-subplot(2,2,2);
-hold on;
-plot(time,x_traj(2,:),'linewidth',4); 
-plot(time,p_target(2,1)*ones(1,Horizon),'red','linewidth',4);
-title('$\dot{\theta}$','Interpreter','latex','fontsize',24);
-xlabel('Time in sec','fontsize',20);
-ylabel('Rad/s','fontsize',20);
+    figure(1);
+    subplot(2,2,1);
+    hold on;
+    plot(time,x_new(1,:),'linewidth',4);  
+    plot(time,p_target(1,1)*ones(1,Horizon),'red','linewidth',4);
+    title('$\theta$','Interpreter','latex','fontsize',24);
+    xlabel('Time in sec','fontsize',20);
+    ylabel('Rad/s','fontsize',20);
+    hold off;
+    grid;   
 
-hold off;
-grid;
+    subplot(2,2,2);
+    hold on;
+    plot(time,x_new(2,:),'linewidth',4); 
+    plot(time,p_target(2,1)*ones(1,Horizon),'red','linewidth',4);
+    title('$\dot{\theta}$','Interpreter','latex','fontsize',24);
+    xlabel('Time in sec','fontsize',20);
+    ylabel('Rad/s','fontsize',20);
 
-subplot(2,2,3);
-hold on
-plot(Cost,'linewidth',2); 
-xlabel('Iterations','fontsize',20);
-title('Cost','fontsize',20);
+    hold off;
+    grid;
+    
+    subplot(2,2,3);
+    hold on
+    plot(Cost,'linewidth',2); 
+    xlabel('Iterations','fontsize',20);
+    title('Cost','fontsize',20);
+    
+    subplot(2,2,4);
+    hold on;
+    title('Animation','fontsize',20);
+    O = [0 0];
+    axis(gca,'equal');
+    axis([-1.5 1.5 -1.5 1.5]);
+    P=1*[sin(x_new(1,end)) -cos(x_new(1,end))];
+    plot([O(1) P(1)],[O(2) P(2)], 'LineWidth', 4);
+    grid;
+end 
 
-subplot(2,2,4);
-hold on;
-title('Animation','fontsize',20);
-invPend_animation(x_traj,Horizon);
-hold off;
-grid;
+
+
+
+
+
+
+
+

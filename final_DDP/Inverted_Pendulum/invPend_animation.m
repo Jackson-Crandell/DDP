@@ -12,7 +12,7 @@ for i=1:horizon
         F(i) = getframe(gcf);
     end
     pause(0.01);
-    if i<1000
+    if i<horizon
         
         delete(pend);
         
