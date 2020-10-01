@@ -4,9 +4,9 @@ th = state(3);
 
 
 % dimensions
-W = 1;  % cart width
-H = .5; % cart height
-wr = .2;          % wheel radius
+W = 1;    % cart width
+H = .5;   % cart height
+wr = .2;  % wheel radius
 mr = .3;  % mass radius
 
 % positions

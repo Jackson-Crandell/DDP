@@ -210,4 +210,3 @@ subplot(3,2,5);hold on
 plot(Cost,'linewidth',2); 
 xlabel('Iterations','fontsize',20)
 title('Cost','fontsize',20);
-   %save('DDP_Data');
