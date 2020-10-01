@@ -9,13 +9,14 @@
 \newcommand{\hwtype}{Homework}
 \newcommand{\hwnum}{1}
 \newcommand{\hwclass}{AE 4803 Robotics and Autonomy}
-\newcommand{\hwdate}{September 23, 2020}
+\newcommand{\hwdate}{October 2, 2020}
 
 \renewcommand{\vec}[1]{\ensuremath{\boldsymbol{#1}}}
 \addtolength{\jot}{0.5em}
 \allowdisplaybreaks
 
 \usepackage[colorlinks=false]{hyperref}
+\usepackage[ruled,vlined]{algorithm2e}
 
 \usepackage{minted}
 \usepackage{ dsfont }
@@ -229,7 +230,7 @@
 
 
 		\questionpart
-	We can compute the equations $V(t_k), V_{\vec{x}}(t_k), V_{\vec{xx}}(t_k)$ in backward time by plugging in our optimal control correction $\delta\vec{u}^{*}(t_{k})$ into the expanded state-action value function $Q(\vec{x}(t_{k}), \vec{u}(t_{k}))$. 
+	We can compute the equations $V(t_k), V_{\vec{x}}(t_k), V_{\vec{xx}}(t_k)$ in backward time by substituting in our optimal control correction $\delta\vec{u}^{*}(t_{k})$ into the expanded state-action value function $Q(\vec{x}(t_{k}), \vec{u}(t_{k}))$. 
 			\begin{align*}
 				& Q(\vec{x}(t_{k}), \vec{u}(t_{k}))\Big|_{\delta\vec{u}^{*}(t_{k}) = \vec{l}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})\delta\vec{x}(t_{k})} \\
 				& =  Q_{0} + Q_{\vec{x}}^{T}\delta\vec{x}(t_{k}) + Q_{\vec{u}}^{T}\Big(\vec{l}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})\delta\vec{x}(t_{k})\Big) \\
@@ -256,15 +257,120 @@
 				& V_{\vec{xx}}(t_{k}) = Q_{\vec{xx}} + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{L}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{ux}} + Q_{\vec{xu}}\vec{L}_{\vec{u}}(t_{k}) 
 			\end{align*}
 	
-		In summary, the backward equations can be expressed as functions of the state-action value function as: 
+		In summary, the backward equations can be expressed as: 
 			\begin{align*}
-				& V(t_k) =  Q_{0} + \vec{l}_{\vec{u}}(t_{k})^{T}Q_{\vec{u}} + \frac{1}{2}\vec{l}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{l}_{\vec{u}}(t_{k}) \\
-				& V_{\vec{x}}(t_{k}) = Q_{\vec{x}} + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{u}} + Q_{\vec{xu}}\vec{l}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{l}_{\vec{u}}(t_{k})\\
-				& V_{\vec{xx}}(t_{k}) = Q_{\vec{xx}} + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{L}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{ux}} + nQ_{\vec{xu}}\vec{L}_{\vec{u}}(t_{k}) \\
+				& V(t_k) = Q_{0} + Q_{\vec{u}}^{T}\vec{l}_{\vec{u}}(t_{k}) + \frac{1}{2}\vec{l}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{l}_{\vec{u}}(t_{k}) \\
+				& V_{\vec{x}}(t_{k}) = Q_{\vec{x}} + Q_{\vec{u}}^{T}\vec{L}_{\vec{u}}(t_{k}) + Q_{\vec{xu}}\vec{l}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{l}_{\vec{u}}(t_{k}) \\
+				& V_{\vec{xx}}(t_{k}) = Q_{\vec{xx}} + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{L}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{ux}} + Q_{\vec{xu}}\vec{L}_{\vec{u}}(t_{k})  \\
+			\end{align*}
+			
+		\newpage
+		Further we can express these simply as functions of state-action value function by substituting in $\vec{l}_{\vec{u}}(t_{k})$ and $\vec{L}_{\vec{u}}(t_{k})$ : \\
+		
+		We do this for the value function: 
+			\begin{align*}
+				& V(t_k) = Q_{0} + Q_{\vec{u}}^{T}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{u}}\Big) + \frac{1}{2}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{u}}\Big)^{T}Q_{\vec{uu}}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{u}}\Big) \\
+				& = Q_{0} - Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{u}} + \frac{1}{2}Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}\underbrace{Q_{\vec{uu}}Q_{\vec{uu}}^{-1}}_{\vec{I}}Q_{\vec{u}} \\
+				& = Q_{0} - Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{u}} + \frac{1}{2}Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{u}} \\
+				& = Q_{0} - \frac{1}{2}Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{u}} 
+			\end{align*}
+			
+		Then, we do this for the gradient of the value function: 
+			\begin{align*}
+				& V_{\vec{x}}(t_{k}) = Q_{\vec{x}} + Q_{\vec{u}}^{T}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{ux}}\Big) + Q_{\vec{xu}}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{u}} \Big)+ \Big(-Q_{\vec{uu}}^{-1}Q_{\vec{ux}}\Big)^{T}Q_{\vec{uu}}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{u}}\Big) \\
+				& = Q_{\vec{x}} - Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{u}} + Q_{\vec{ux}}^{T}Q_{\vec{uu}}^{-1}\underbrace{Q_{\vec{uu}}Q_{\vec{uu}}^{-1}}_{\vec{I}}Q_{\vec{u}} \\
+				& = Q_{\vec{x}} - Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{u}} + Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \\
+				& = Q_{\vec{x}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{u}} 
 			\end{align*}
 		
+		Finally, we do this for the Hessian of the value function: 
+			\begin{align*}
+				& V_{\vec{xx}}(t_{k}) = Q_{\vec{xx}} + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{uu}}\vec{L}_{\vec{u}}(t_{k}) + \vec{L}_{\vec{u}}(t_{k})^{T}Q_{\vec{ux}} + Q_{\vec{xu}}\vec{L}_{\vec{u}}(t_{k})  \\
+				& = Q_{\vec{xx}} + \Big(-Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \Big)^{T}Q_{\vec{uu}}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \Big) + \Big(-Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \Big)^{T}Q_{\vec{ux}} + Q_{\vec{xu}}\Big(-Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \Big) \\
+				& = Q_{\vec{xx}} + Q_{\vec{ux}}^{T}Q_{\vec{uu}}^{-1}\underbrace{Q_{\vec{uu}}Q_{\vec{uu}}^{-1}}_{\vec{I}}Q_{\vec{ux}}  - Q_{\vec{ux}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \\
+				& = Q_{\vec{xx}} + Q_{\vec{ux}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{ux}}  - Q_{\vec{ux}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \\
+				& = Q_{\vec{xx}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{ux}}\\
+			\end{align*}		
 		
 	\end{arabicparts}
+
+		In summary, the backward equations can be expressed as functions of the state-action value function as: 
+
+			\begin{align*}
+				& V(t_k) = Q_{0} - \frac{1}{2}Q_{\vec{u}}^{T}Q_{\vec{uu}}^{-1}Q_{\vec{u}} \\
+				& V_{\vec{x}}(t_{k}) = Q_{\vec{x}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{u}} \\
+				& V_{\vec{xx}}(t_{k}) = Q_{\vec{xx}} - Q_{\vec{xu}}Q_{\vec{uu}}^{-1}Q_{\vec{ux}} \\
+			\end{align*}
+
+	\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Part 3 
+\setcounter{questionCounter}{1}
+\renewcommand{\questiontype}{Part}
+\question
+\begin{arabicparts}
+%\setcounter{questionCounter}{2}
+
+
+\questionpart
+See MATLAB code implementation.
+
+\questionpart
+See MATLAB code implementation.
+
+\questionpart
+
+	In this problem we are asked to test the robustness of our DDP policy against stochastic forces that act as disturbances in our dynamics. 
+		\begin{align*}
+			& I\ddot{\theta} + b\dot{\theta} + mglsin(\theta) = u + f_{stochastic}
+		\end{align*}
+	
+	We do this by running the DDP optimization until it converges. This results in an optimal trajectory $\vec{x}^{*}(t_{k})$, optimal control input $\vec{u}^{*}(t_{k})$, and optimal feeback gains $\vec{L}^{*}(t_{k})$. 
+	We then initialize a new trajectory and propagate the dynamics forward using the following controller: $\vec{u}(t_{k}) = \vec{u}^{*}(t_{k}) + \vec{L}^{*}(t_{k})\big(\vec{x}(t_{k}) - \vec{x}^{*}(t_{k}) \big)$ \\
+	
+	This process is repeated for many trajectories throught the following algorithm:
+	
+	\begin{algorithm}[H]
+		\SetAlgoLined
+ 		initialize: $\vec{x}^{*}(t_{k}), \vec{u}^{*}(t_{k}), \vec{L}^{*}(t_{k})$\;
+ 		initialize: $ \vec{H}$: time horizon, $dt$ :time step, $ \vec{num\_traj}$: number of trajectories\;
+ 		initialize: $\vec{F_{x}}(\vec{x}(t_{k})), \vec{F_{u}}(\vec{u}(t_{k}))$: dynamics\;
+ 		initialize: $\vec{x}(t_{k}) = \vec{0}$\;
+ 		initialize: $\sigma$: noise level\;
+ 		
+ 		\For{$\vec{i} = 1$ to $\vec{num\_traj}$}{
+  			\For{$\vec{k} = 1$ to $\vec{H} - 1$}{
+  				$R = $ randn\;
+  				$\vec{u}(t_{k}) = \vec{u}^{*}(t_{k}) + \vec{L}^{*}(t_{k})\big(\vec{x}(t_{k}) - \vec{x}^{*}(t_{k}) \big)$\;
+  				$\vec{x}(t_{k+1}) = \vec{F_{x}}(\vec{x}(t_{k}))dt + \vec{F_{u}}(\vec{u}(t_{k}))dt + \vec{F_{u}}(\vec{u}(t_{k}))R\sigma\sqrt{dt}$
+  			}
+ 		}
+ 		\caption{DDP Robustness Test Against Stochastic Forces}
+	\end{algorithm}
+	\newpage
+	The following plot shows the results of DDP after optimization:
+	
+		\begin{figure}[H]
+			\centering
+			\includegraphics[scale=0.13]{clean_results.png}
+			\caption{DDP optimal results.}
+		\end{figure}
+		
+	The following plot shows the results of running the Robustness Test algorithm for 20 trajectories using the optimal DDP trajectory, controller, and feedback gains:
+	
+		\begin{figure}[H]
+			\centering
+			\includegraphics[scale=0.16]{robust_test.png}
+			\caption{Robustness Test results.}
+		\end{figure}
+
+\end{arabicparts}
+
+	
+
+
+
+
 
 
 \end{document}
