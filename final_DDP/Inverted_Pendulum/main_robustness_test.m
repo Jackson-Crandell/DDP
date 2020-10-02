@@ -156,7 +156,7 @@ time(1)=0;
 for i= 2:Horizon
 	time(i) =time(i-1) + dt;  
 end
-
+%%
 %---------------------------------------------> Implementation of Robustness Test Algorithm
 x_star = x_traj; 
 u_star = u_new; 
@@ -172,36 +172,42 @@ for i = 1:num_traj
     [Cost(:,k)] =  fnCostComputation(x_new,u_neww,p_target,dt,Q_f,R);
 
     figure(1);
+
     subplot(2,2,1);
+    set(gca,'FontSize',32)
+
     hold on;
     plot(time,x_new(1,:),'linewidth',4);  
     plot(time,p_target(1,1)*ones(1,Horizon),'red','linewidth',4);
-    title('$\theta$','Interpreter','latex','fontsize',24);
-    xlabel('Time in sec','fontsize',20);
-    ylabel('Rad/s','fontsize',20);
+    title('$\theta$','Interpreter','latex','fontsize',32);
+    xlabel('Time in sec','fontsize',32);
+    ylabel('Rad/s','fontsize',32);
     hold off;
     grid;   
 
     subplot(2,2,2);
+    set(gca,'FontSize',32)
     hold on;
     plot(time,x_new(2,:),'linewidth',4); 
     plot(time,p_target(2,1)*ones(1,Horizon),'red','linewidth',4);
-    title('$\dot{\theta}$','Interpreter','latex','fontsize',24);
-    xlabel('Time in sec','fontsize',20);
-    ylabel('Rad/s','fontsize',20);
+    title('$\dot{\theta}$','Interpreter','latex','fontsize',32);
+    xlabel('Time in sec','fontsize',32);
+    ylabel('Rad/s','fontsize',32);
 
     hold off;
     grid;
     
     subplot(2,2,3);
+    set(gca,'FontSize',32)
     hold on
     plot(Cost,'linewidth',2); 
-    xlabel('Iterations','fontsize',20);
-    title('Cost','fontsize',20);
+    xlabel('Iterations','fontsize',32);
+    title('Cost','fontsize',32);
     
     subplot(2,2,4);
+    set(gca,'FontSize',32)
     hold on;
-    title('Animation','fontsize',20);
+    title('Animation','fontsize',32);
     O = [0 0];
     axis(gca,'equal');
     axis([-1.5 1.5 -1.5 1.5]);
