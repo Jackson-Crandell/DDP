@@ -66,12 +66,6 @@ p_target(4,1) = 0;          % theta_dot (angular velocity of the pole)
 % Learning Rate
 gamma = 0.4; 
 
-% Initialize the state space equations for the dynamics 
-% x1: dot_x (velocity)
-% x2: ddot_x (acceleration)
-% x3: dot_theta (angular velocity)
-% x4: ddot_theta (angular accelaration)
-% u: control input (force)
 syms x1 x2 x3 x4 u
 
 F = [  x2,
@@ -81,8 +75,6 @@ F = [  x2,
 ]; 
 
 dynamicsf = matlabFunction(F);
-
-%Compute the Jacobians of the dynamics
 dFx = matlabFunction(jacobian(F, [x1; x2; x3; x4]));
 dFu = matlabFunction(jacobian(F, [u]));
 
@@ -138,25 +130,23 @@ end
 
 
 %----------------------------------------------> Find the controls
-% dx is initially zero because we start from the same point
-dx = zeros(4,1); 
+dx = zeros(4,1); % dx is initially zero because we start from the same point
 for i=1:(Horizon-1)    
    du = l_k(:,i) + L_k(:,:,i) * dx; 		%Feedback Controller 
    dx = A(:,:,i) * dx + B(:,:,i) * du; 		% As we propagate forward, we use the linearized dynamics to approximate dx (this is the error from the nominal trajectory)
    u_new(:,i) = u_k(:,i) + gamma * du; 		% Update controls with gamma to prevent controls from updating too fast
 end
 
-%Update nominal trajectory (u_k) for new updated controls
-u_k = u_new; 	
+u_k = u_new; 	%Update nominal trajectory (u_k) for new updated controls
 
 
 %---------------------------------------------> Simulation of the Nonlinear System
-%Create new nominal trajectory based on new control (u_new)
-[x_traj] = fnsimulate(xo,u_new,Horizon,dt,0,dynamicsf);	 
-
+[x_traj] = fnsimulate(xo,u_new,Horizon,dt,0,dynamicsf);	 %Create new nominal trajectory based on new control (u_new)
 [Cost(:,k)] =  fnCostComputation(x_traj,u_k,p_target,dt,Q_f,R);
  
+
 fprintf('iLQG Iteration %d,  Current Cost = %e \n',k,Cost(1,k));
+ 
  
 end
 
@@ -166,7 +156,7 @@ for i= 2:Horizon
 end
 
 for k=1:1:Horizon
-    drawCartpend(x_traj(:,k),m_p,m_c,l);
+   % drawCartpend(x_traj(:,k),m_p,m_c,l);
     if (save_video)
         E(k) = getframe(gcf);
     end
