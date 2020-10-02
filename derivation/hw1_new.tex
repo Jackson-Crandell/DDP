@@ -188,7 +188,7 @@
 			& Q_{\vec{u}} = \mathcal{L}_{\vec{u}} + \vec{B}(t_{k})^{T}V_{\vec{x}}(t_{k+1}) \\
 			& Q_{\vec{xx}} = \mathcal{L}_{\vec{xx}} + \vec{\Phi}(t_{k})^{T}V_{\vec{xx}}(t_{k+1})\vec{\Phi}(t_{k}) \\
 			& Q_{\vec{uu}} = \mathcal{L}_{\vec{uu}} + \vec{B}(t_{k})^{T}V_{\vec{xx}}(t_{k+1})\vec{B}(t_{k}) \\
-			& Q_{\vec{ux}} = \vec{B}(t_{k})^{T}V_{\vec{xx}}(t_{k+1})\vec{\Phi}(t_{k}) + \mathcal{L}_{\vec{ux}}
+			& Q_{\vec{ux}} = \mathcal{L}_{\vec{ux}} + \vec{B}(t_{k})^{T}V_{\vec{xx}}(t_{k+1})\vec{\Phi}(t_{k}) 
 		\end{align*}
 	
 	\newpage
@@ -313,12 +313,19 @@
 
 
 \questionpart
-See MATLAB code implementation.
+See MATLAB code implementation. 
+
+To run this simulation run the Inverted\_Pendulum/main.m file. 
+
+\questionpart
+See MATLAB code implementation. 
+
+To run this simulation run the CartPole/main.m file. 
 
 \questionpart
 See MATLAB code implementation.
 
-\questionpart
+To run this simulation run the Inverted\_Pendulum/main\_robustness\_test.m file. \\
 
 	In this problem we are asked to test the robustness of our DDP policy against stochastic forces that act as disturbances in our dynamics. 
 		\begin{align*}
@@ -326,23 +333,23 @@ See MATLAB code implementation.
 		\end{align*}
 	
 	We do this by running the DDP optimization until it converges. This results in an optimal trajectory $\vec{x}^{*}(t_{k})$, optimal control input $\vec{u}^{*}(t_{k})$, and optimal feeback gains $\vec{L}^{*}(t_{k})$. 
-	We then initialize a new trajectory and propagate the dynamics forward using the following controller: $\vec{u}(t_{k}) = \vec{u}^{*}(t_{k}) + \vec{L}^{*}(t_{k})\big(\vec{x}(t_{k}) - \vec{x}^{*}(t_{k}) \big)$ \\
+	We then initialize a new trajectory and propagate the dynamics forward, perturbed by a stochastic force term, using the following controller: $\vec{u}(t_{k}) = \vec{u}^{*}(t_{k}) + \vec{L}^{*}(t_{k})\big(\vec{x}(t_{k}) - \vec{x}^{*}(t_{k}) \big)$ \\
 	
-	This process is repeated for many trajectories throught the following algorithm:
+	This process is repeated for many trajectories throught the following algorithm:\\
 	
 	\begin{algorithm}[H]
 		\SetAlgoLined
- 		initialize: $\vec{x}^{*}(t_{k}), \vec{u}^{*}(t_{k}), \vec{L}^{*}(t_{k})$\;
- 		initialize: $ \vec{H}$: time horizon, $dt$ :time step, $ \vec{num\_traj}$: number of trajectories\;
- 		initialize: $\vec{F_{x}}(\vec{x}(t_{k})), \vec{F_{u}}(\vec{u}(t_{k}))$: dynamics\;
- 		initialize: $\vec{x}(t_{k}) = \vec{0}$\;
- 		initialize: $\sigma$: noise level\;
+ 		Initialize: $\vec{x}^{*}(t_{k}), \vec{u}^{*}(t_{k}), \vec{L}^{*}(t_{k})$\;
+ 		Initialize: $ \vec{H}$: time horizon, $dt$ :time step, $ \vec{num\_traj}$: number of trajectories\;
+ 		Initialize: $\vec{F_{x}}(\vec{x}(t_{k})), \vec{F_{u}}(\vec{u}(t_{k}))$: dynamics\;
+ 		Initialize: $\vec{x}(t_{k}) = \vec{0}$\;
+ 		Initialize: $\sigma$: noise level\;
  		
  		\For{$\vec{i} = 1$ to $\vec{num\_traj}$}{
   			\For{$\vec{k} = 1$ to $\vec{H} - 1$}{
-  				$R = $ randn\;
+  				$R = \sigma\times randn$\;
   				$\vec{u}(t_{k}) = \vec{u}^{*}(t_{k}) + \vec{L}^{*}(t_{k})\big(\vec{x}(t_{k}) - \vec{x}^{*}(t_{k}) \big)$\;
-  				$\vec{x}(t_{k+1}) = \vec{F_{x}}(\vec{x}(t_{k}))dt + \vec{F_{u}}(\vec{u}(t_{k}))dt + \vec{F_{u}}(\vec{u}(t_{k}))R\sigma\sqrt{dt}$
+  				$\vec{x}(t_{k+1}) = \vec{F_{x}}(\vec{x}(t_{k}))dt + \vec{F_{u}}(\vec{u}(t_{k}))dt + \vec{F_{u}}(\vec{u}(t_{k}))R\sqrt{dt}$
   			}
  		}
  		\caption{DDP Robustness Test Against Stochastic Forces}
@@ -352,15 +359,15 @@ See MATLAB code implementation.
 	
 		\begin{figure}[H]
 			\centering
-			\includegraphics[scale=0.13]{clean_results.png}
+			\includegraphics[scale=0.14]{clean_results.png}
 			\caption{DDP optimal results.}
 		\end{figure}
 		
-	The following plot shows the results of running the Robustness Test algorithm for 20 trajectories using the optimal DDP trajectory, controller, and feedback gains:
+	The following plot shows the results of running the Robustness Test algorithm for 20 trajectories using the optimal DDP trajectory, controller, and feedback gains with a noise level of $\sigma = 1.0$:
 	
 		\begin{figure}[H]
 			\centering
-			\includegraphics[scale=0.16]{robust_test.png}
+			\includegraphics[scale=0.08]{robust_test2.png}
 			\caption{Robustness Test results.}
 		\end{figure}
 
